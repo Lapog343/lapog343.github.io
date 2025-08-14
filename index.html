@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Artist & Music Producer Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Major+Mono+Display&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/ScrollTrigger.min.js"></script>
+    <!-- Add React and ReactDOM from a CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Add Babel to compile JSX in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Phosphor Icons for video controls -->
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1/dist/phosphor.js"></script>
+
+    <style>
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #0b0213; /* Deep, surreal purple-black */
+            color: #e2e8f0;
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='%23d8b4fe'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E"), auto; /* Custom pointer */
+        }
+        h1, h2 {
+            font-family: 'Major Mono Display', monospace;
+            text-shadow: 0 0 15px #d8b4fe, 0 0 25px #a855f7; /* Increased shadow for better visibility on hero page */
+        }
+        #react-visualizer-root {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.7; /* Slightly more transparent */
+            filter: blur(0.1px) brightness(1.2); /* Added blur and brightness for surreal effect */
+        }
+        #react-visualizer-root canvas {
+            width: 100%;
+            height: 100%;
+        }
+        /* The hero section no longer has this class */
+        .content-section {
+            position: relative;
+            z-index: 1;
+            padding: 100px 5%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: rgba(11, 2, 19, 0.5); /* Semi-transparent background for other sections */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .horizontal-scroll-section {
+            overflow-x: hidden;
+            padding: 100px 0;
+        }
+        .video-track {
+            display: flex;
+            width: max-content;
+            padding-left: 5%;
+            padding-right: 5%;
+        }
+        .video-card {
+            width: 70vw;
+            height: 40vw;
+            max-width: 800px;
+            max-height: 450px;
+            margin-right: 40px;
+            flex-shrink: 0;
+            background-color: #1c062c;
+            border-radius: 1.5rem; /* Larger border-radius */
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #a855f7; /* Brighter, glowing border */
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24' fill='%23ffffff'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z'/%3E%3C/svg%3E"), pointer;
+        }
+        .video-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 0 25px rgba(216, 180, 254, 0.8), 0 0 40px rgba(168, 85, 247, 0.6);
+        }
+        .video-card video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(168,85,247,0.7), transparent);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1.5rem;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .video-card:hover .video-overlay {
+            opacity: 0;
+        }
+        .mute-toggle-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 0.5rem;
+            border-radius: 50%;
+            z-index: 10;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .mute-toggle-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .audio-player {
+            background-color: #1c062c;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            border: 2px solid #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+        }
+        .ab-toggle {
+            position: relative;
+            width: 100px;
+            height: 40px;
+            background-color: #3f195d;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .ab-toggle-slider {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 45px;
+            height: 30px;
+            background-color: #d8b4fe;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+        .ab-toggle.toggled .ab-toggle-slider {
+            transform: translateX(50px);
+        }
+        .ab-toggle span {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 500;
+        }
+        .ab-toggle .unmixed-label { left: 15px; }
+        .ab-toggle .mixed-label { right: 15px; }
+
+        /* Fullscreen Modal */
+        #fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 2rem;
+        }
+        #fullscreen-video {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 1.5rem;
+            box-shadow: 0 0 30px rgba(216, 180, 254, 0.8);
+        }
+        #close-fullscreen-btn {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+        #close-fullscreen-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Custom message box for mic access */
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #1c062c;
+            border: 2px solid #a855f7;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            z-index: 100;
+            color: #e2e8f0;
+            display: none;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+            text-align: center;
+        }
+        #message-box button {
+            margin-top: 1rem;
+            background-color: #d8b4fe;
+            color: #1c062c;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <!-- This is the container for our React visualizer -->
+    <div id="react-visualizer-root"></div>
+    <div id="message-box" class="text-center">
+        <p id="message-text"></p>
+        <button id="message-close">OK</button>
+    </div>
+
+    <!-- Fullscreen Modal for Videos -->
+    <div id="fullscreen-modal">
+        <button id="close-fullscreen-btn">X</button>
+        <video id="fullscreen-video" controls playsinline></video>
+    </div>
+
+    <!-- Hero Section: No content-section class to make particles the focus -->
+    <section id="hero" class="h-screen flex items-center justify-center text-center">
+        <div>
+            <h1 class="text-5xl md:text-8xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600 mb-6">
+                SOUND. VISION. SYNTHESIZED.
+            </h1>
+            <p class="max-w-3xl mx-auto text-xl md:text-2xl text-slate-300 mb-8 leading-relaxed text-shadow">
+                I am a visual artist and music producer. I sculpt sonic energy into immersive visual experiences and craft  mixes that resonate.
+            </p>
+            <button id="mic-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-full transition-all transform hover:scale-105 shadow-lg">
+                Activate Your Mic & Cam
+            </button>
+            <p class="mt-4 text-xs text-slate-500">Allow microphone & camera access to see the visuals react to your voice.</p>
+        </div>
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-pulse">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- Visuals Section -->
+    <section id="visuals" class="horizontal-scroll-section content-section">
+        <div class="w-full max-w-6xl mx-auto mb-16 text-center">
+            <h2 class="text-4xl font-bold mb-4 text-purple-300">Generative & Reactive Art</h2>
+            <p class="text-lg text-slate-400">From intimate club shows to large-scale music videos, I craft visuals that amplify the performance.</p>
+        </div>
+        <div class="video-track-container">
+            <div class="video-track">
+                <!-- Video Card 1 -->
+                <div class="video-card">
+                    <video src="videos/Earl.mp4" muted loop playsinline></video>
+                    <div class="video-overlay">
+                        <h3 class="text-2xl font-bold">Project One</h3>
+                        <p class="text-sm text-slate-300">Live VJ Set - Ashton Court</p>
+                    </div>
+                    <button class="mute-toggle-btn">
+                        <!-- Mute Icon -->
+                        <i class="ph-bold ph-speaker-slash text-white text-xl"></i>
+                    </button>
+                </div>
+                <!-- Video Card 2 -->
+                <div class="video-card">
+                    <video src="videos/TDMovieOut.2.mp4" muted loop playsinline></video>
+                    <div class="video-overlay">
+                        <h3 class="text-2xl font-bold">Project Two</h3>
+                        <p class="text-sm text-slate-300">Music Video FX - Vanders VIII</p>
+                    </div>
+                    <button class="mute-toggle-btn">
+                        <!-- Mute Icon -->
+                        <i class="ph-bold ph-speaker-slash text-white text-xl"></i>
+                    </button>
+                </div>
+                <!-- Video Card 3 -->
+                <div class="video-card">
+                    <video src="videos/Tdmovieout.0.mp4" muted loop playsinline></video>
+                    <div class="video-overlay">
+                        <h3 class="text-2xl font-bold">Project Three</h3>
+                        <p class="text-sm text-slate-300">Audioreactive Installation</p>
+                    </div>
+                    <button class="mute-toggle-btn">
+                        <!-- Mute Icon -->
+                        <i class="ph-bold ph-speaker-slash text-white text-xl"></i>
+                    </button>
+                </div>
+                <!-- Video Card 4 -->
+                <div class="video-card">
+                    <video src="videos/Tdmovieout.10.mp4" muted loop playsinline></video>
+                    <div class="video-overlay">
+                        <h3 class="text-2xl font-bold">Project Four</h3>
+                        <p class="text-sm text-slate-300">Touchdesigner Experiments</p>
+                    </div>
+                    <button class="mute-toggle-btn">
+                        <!-- Mute Icon -->
+                        <i class="ph-bold ph-speaker-slash text-white text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Audio Section -->
+    <section id="audio" class="content-section">
+        <div class="w-full max-w-4xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold mb-4 text-purple-300">Mixing & Mastering Alchemy</h2>
+                <p class="text-lg text-slate-400">Hear the difference. I provide clarity, punch, and professional polish to bring your tracks to life.</p>
+            </div>
+
+            <!-- A/B Player 1 -->
+            <div class="audio-player mb-12">
+                <h3 class="text-2xl font-bold mb-2">Artist Name - Song Title</h3>
+                <p class="text-slate-400 mb-6">The goal was to create a wider stereo field, add punch to the kick and snare, and bring clarity to the vocals.</p>
+                <div class="flex items-center space-x-4">
+                    <button class="play-pause-btn bg-purple-600 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <div class="flex items-center space-x-4 flex-grow">
+                        <span class="unmixed-label text-sm font-medium text-slate-400">Unmixed</span>
+                        <div class="ab-toggle" data-player-id="1">
+                            <div class="ab-toggle-slider"></div>
+                        </div>
+                        <span class="mixed-label text-sm font-medium text-white">Mixed</span>
+                    </div>
+                </div>
+                <audio class="unmixed-audio" src="audio/allineed.wav" preload="metadata"></audio>
+                <audio class="mixed-audio" src="audio/cuttin.wav" preload="metadata"></audio>
+            </div>
+            
+            <!-- A/B Player 2 -->
+            <div class="audio-player">
+                <h3 class="text-2xl font-bold mb-2">Another Artist - Another Song</h3>
+                <p class="text-slate-400 mb-6">This track needed a heavier low-end, tighter vocal harmonies, and dynamic automation to build excitement.</p>
+                <div class="flex items-center space-x-4">
+                    <button class="play-pause-btn bg-purple-600 p-3 rounded-full">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                    </button>
+                    <div class="flex items-center space-x-4 flex-grow">
+                        <span class="unmixed-label text-sm font-medium text-slate-400">Unmixed</span>
+                        <div class="ab-toggle" data-player-id="2">
+                            <div class="ab-toggle-slider"></div>
+                        </div>
+                        <span class="mixed-label text-sm font-medium text-white">Mixed</span>
+                    </div>
+                </div>
+                <audio class="unmixed-audio" src="audio/floaty.wav" preload="metadata"></audio>
+                <audio class="mixed-audio" src="audio/londis.wav" preload="metadata"></audio>
+            </div>
+        </div>
+    </section>
+
+    <!-- About & Contact Section -->
+    <section id="contact" class="content-section">
+        <div class="w-full max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-bold mb-4 text-purple-300">Let's Create Together</h2>
+            <p class="text-lg text-slate-400 mb-8 max-w-2xl mx-auto">I'm passionate about collaborating with artists to push creative boundaries. Whether you need stunning live visuals, compelling music video effects, or a professional mix that makes your music shine, I'm here to help.</p>
+<div class="text-center mt-8">
+  <button id="contact-now-button" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-full transition-all transform hover:scale-105 shadow-lg">
+    Contact Now
+  </button>
+</div>
+        </div>
+    </section>
+
+    <!-- This script contains the React App and renders it -->
+    <script type="text/babel">
+    const App = () => {
+        const canvasRef = React.useRef(null);
+        const audioContextRef = React.useRef(null);
+        const analyserRef = React.useRef(null);
+        const sourceRef = React.useRef(null);
+        const dataArrayRef = React.useRef(null);
+        const animationFrameIdRef = React.useRef(null);
+        const videoRef = React.useRef(null);
+        const videoReadyRef = React.useRef(false);
+        const tempCanvasRef = React.useRef(null);
+        const prevVideoDataRef = React.useRef(null);
+        const mouseRef = React.useRef({ x: null, y: null });
+        
+        // --- OPTIMIZATION & NEW FEATURES ---
+        const particlesRef = React.useRef([]);
+        const ripplesRef = React.useRef([]);
+        const motionGridRef = React.useRef(null);
+        const GRID_COLS = 20;
+        const GRID_ROWS = 13;
+        // --- END OPTIMIZATION & NEW FEATURES ---
+
+        const [micActive, setMicActive] = React.useState(false);
+        
+        // --- USER REQUESTED CHANGES ---
+        const NUM_PARTICLES = 3000; // Reduced from 4000 for performance
+        // --- END USER REQUESTED CHANGES ---
+
+        const showMessage = (text) => {
+            const msgBox = document.getElementById('message-box');
+            document.getElementById('message-text').textContent = text;
+            msgBox.style.display = 'block';
+        };
+
+        React.useEffect(() => {
+            document.getElementById('message-close').addEventListener('click', () => {
+                document.getElementById('message-box').style.display = 'none';
+            });
+        }, []);
+
+        const initializeAudio = React.useCallback(async () => {
+            try {
+                if (!window.AudioContext) throw new Error('AudioContext is not supported.');
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('Microphone access not supported.');
+                
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                audioContextRef.current = audioContext;
+                const analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                analyserRef.current = analyser;
+                dataArrayRef.current = new Uint8Array(analyser.frequencyBinCount);
+                
+                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                sourceRef.current = audioContext.createMediaStreamSource(audioStream);
+                sourceRef.current.connect(analyser);
+                
+                try {
+                    const video = document.createElement('video');
+                    video.autoplay = true;
+                    video.muted = true;
+                    video.playsInline = true;
+                    const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    video.srcObject = videoStream;
+                    videoRef.current = video;
+                    video.onloadedmetadata = () => {
+                        videoReadyRef.current = true;
+                        console.log("Webcam video is ready");
+                    };
+                } catch (videoErr) {
+                    console.error("Error initializing webcam video:", videoErr);
+                    showMessage(`Warning: Webcam could not be initialized. Visuals will react to audio but not display webcam feed.`);
+                    videoReadyRef.current = false;
+                }
+
+                setMicActive(true);
+            } catch (err) {
+                console.error("Error initializing audio/video:", err);
+                showMessage(`Error: ${err.message}. Please grant microphone and camera permissions.`);
+                setMicActive(false);
+            }
+        }, []);
+
+        const stopAudio = React.useCallback(() => {
+            if (videoRef.current && videoRef.current.srcObject) {
+                videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+                videoRef.current = null;
+                videoReadyRef.current = false;
+            }
+            if (sourceRef.current) {
+                sourceRef.current.mediaStream.getTracks().forEach(track => track.stop());
+                sourceRef.current.disconnect();
+                sourceRef.current = null;
+            }
+            if (audioContextRef.current) {
+                audioContextRef.current.close();
+                audioContextRef.current = null;
+            }
+            setMicActive(false);
+        }, []);
+
+        React.useEffect(() => {
+            const micButton = document.getElementById('mic-button');
+            const toggleMic = () => micActive ? stopAudio() : initializeAudio();
+            if (micButton) {
+                micButton.addEventListener('click', toggleMic);
+                return () => micButton.removeEventListener('click', toggleMic);
+            }
+        }, [micActive, initializeAudio, stopAudio]);
+
+        React.useEffect(() => {
+            const micButton = document.getElementById('mic-button');
+            if (micButton) {
+                if (micActive) {
+                    micButton.textContent = 'Deactivate Mic';
+                    micButton.classList.remove('bg-purple-600', 'hover:bg-purple-700');
+                    micButton.classList.add('bg-red-600', 'hover:bg-red-700', 'animate-pulse');
+                } else {
+                    micButton.textContent = 'Activate Your Mic';
+                    micButton.classList.remove('bg-red-600', 'hover:bg-red-700', 'animate-pulse');
+                    micButton.classList.add('bg-purple-600', 'hover:bg-purple-700');
+                }
+            }
+        }, [micActive]);
+
+        const createParticles = React.useCallback(() => {
+            const newParticles = [];
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            for (let i = 0; i < NUM_PARTICLES; i++) {
+                newParticles.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 32 + 18,
+                    color: { r: 0, g: 0, b: 0 },
+                    history: [],
+                    maxHistory: 2
+                });
+            }
+            particlesRef.current = newParticles;
+        }, []);
+        
+        React.useEffect(() => {
+            createParticles();
+            motionGridRef.current = new Float32Array(GRID_COLS * GRID_ROWS);
+            window.addEventListener('resize', createParticles);
+            return () => window.removeEventListener('resize', createParticles);
+        }, [createParticles]);
+
+        React.useEffect(() => {
+            const handleMouseMove = (event) => {
+                mouseRef.current.x = event.clientX;
+                mouseRef.current.y = event.clientY;
+            };
+            const handleMouseDown = (event) => {
+                ripplesRef.current.push({
+                    x: event.clientX,
+                    y: event.clientY,
+                    radius: 2,
+                    maxRadius: Math.random() * 20 ,
+                    speed: Math.random() * 2 + 1,
+                    life: 1.0
+                });
+            };
+
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mousedown', handleMouseDown);
+            return () => {
+                window.removeEventListener('mousemove', handleMouseMove);
+                window.removeEventListener('mousedown', handleMouseDown);
+            };
+        }, []);
+
+        const draw = React.useCallback(() => {
+            animationFrameIdRef.current = requestAnimationFrame(draw);
+
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            const analyser = analyserRef.current;
+            const dataArray = dataArrayRef.current;
+            
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+            if (!ctx) return;
+
+            ctx.fillStyle = 'rgba(10, 2, 19, 0.25)';
+            ctx.fillRect(0, 0, width, height);
+
+            let videoData = null;
+            if (videoRef.current && videoReadyRef.current && videoRef.current.videoWidth > 0) {
+                if (!tempCanvasRef.current) tempCanvasRef.current = document.createElement('canvas');
+                const tempCtx = tempCanvasRef.current.getContext('2d');
+                const vW = videoRef.current.videoWidth;
+                const vH = videoRef.current.videoHeight;
+                if (tempCanvasRef.current.width !== vW) tempCanvasRef.current.width = vW;
+                if (tempCanvasRef.current.height !== vH) tempCanvasRef.current.height = vH;
+                
+                tempCtx.drawImage(videoRef.current, 0, 0, vW, vH);
+                const currentVideoData = tempCtx.getImageData(0, 0, vW, vH).data;
+                
+                if (prevVideoDataRef.current) {
+                    motionGridRef.current.fill(0);
+                    const cellWidth = vW / GRID_COLS;
+                    const cellHeight = vH / GRID_ROWS;
+                    
+                    for (let y = 0; y < vH; y++) {
+                        for (let x = 0; x < vW; x++) {
+                            const idx = (y * vW + x) * 8;
+                            const diff = Math.abs(currentVideoData[idx] - prevVideoDataRef.current[idx]);
+                            if (diff > 20) {
+                                const gridX = Math.floor(x / cellWidth);
+                                const gridY = Math.floor(y / cellHeight);
+                                motionGridRef.current[gridY * GRID_COLS + gridX] += diff;
+                            }
+                        }
+                    }
+                    for(let i = 0; i < motionGridRef.current.length; i++) {
+                        motionGridRef.current[i] = Math.min(1, motionGridRef.current[i] / (cellWidth * cellHeight * 50));
+                    }
+                }
+                prevVideoDataRef.current = currentVideoData;
+                videoData = currentVideoData;
+            }
+            
+            if (analyser && dataArray) {
+    analyser.getByteFrequencyData(dataArray);
+} else {
+    dataArrayRef.current = new Uint8Array(128); // fallback empty array
+}
+
+            
+            analyser.getByteFrequencyData(dataArray);
+            const lowFreqData = dataArray.slice(0, dataArray.length / 3);
+            const midFreqData = dataArray.slice(dataArray.length / 3, (dataArray.length * 2) / 3);
+            const highFreqData = dataArray.slice((dataArray.length * 2) / 3, dataArray.length);
+
+            const avgLowFreq = lowFreqData.reduce((a, b) => a + b, 0) / lowFreqData.length / 255;
+            const avgMidFreq = midFreqData.reduce((a, b) => a + b, 0) / midFreqData.length / 255;
+            const avgHighFreq = highFreqData.reduce((a, b) => a + b, 0) / highFreqData.length / 255;
+            
+            const mouse = mouseRef.current;
+            const particles = particlesRef.current;
+
+            ripplesRef.current = ripplesRef.current.filter(r => r.life > 0);
+            ripplesRef.current.forEach(r => {
+                r.radius += r.speed;
+                r.life -= 0.01;
+            });
+
+            particles.forEach(p => {
+                p.history.push({x: p.x, y: p.y});
+                if (p.history.length > p.maxHistory) {
+                    p.history.shift();
+                }
+
+                if (mouse.x && mouse.y) {
+                    const dx = p.x - mouse.x;
+                    const dy = p.y - mouse.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 50) {
+                        const force = 0.5 - (distance / 50);
+                        p.vx += (dx / distance) * force * 2;
+                        p.vy += (dy / distance) * force * 2;
+                    }
+                }
+                
+                ripplesRef.current.forEach(r => {
+                    const dx = p.x - r.x;
+                    const dy = p.y - r.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < r.radius && dist > r.radius - 20) {
+                        const angle = Math.atan2(dy, dx);
+                        p.vx += Math.cos(angle) * r.life * 5;
+                        p.vy += Math.sin(angle) * r.life * 5;
+                    }
+                });
+
+                const gridX = Math.floor(p.x / width * GRID_COLS);
+                const gridY = Math.floor(p.y / height * GRID_ROWS);
+                const motionIntensity = motionGridRef.current[gridY * GRID_COLS + gridX] || 0;
+                
+                const speedMultiplier = 1 + avgHighFreq * 10 + motionIntensity * 20;
+                p.x += p.vx * speedMultiplier;
+                p.y += p.vy * speedMultiplier;
+
+                if (motionIntensity > 0.1) {
+                    p.vx += (Math.random() - 0.5) * motionIntensity;
+                    p.vy += (Math.random() - 0.5) * motionIntensity;
+                }
+
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                // --- USER REQUESTED CHANGES ---
+                p.size = 16 + avgLowFreq * 75; // Increased base size and audio reactivity
+                // --- END USER REQUESTED CHANGES ---
+                
+                if (videoData) {
+                    const vW = tempCanvasRef.current.width;
+                    const vH = tempCanvasRef.current.height;
+                    let drawW, drawH, drawX, drawY;
+                    if (width / vW > height / vH) {
+                        drawW = width; drawH = vH * (width / vW); drawX = 0; drawY = (height - drawH) / 2;
+                    } else {
+                        drawH = height; drawW = vW * (height / vH); drawY = 0; drawX = (width - drawW) / 2;
+                    }
+                    const u = (p.x - drawX) / drawW;
+                    const v = (p.y - drawY) / drawH;
+
+                    if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+                        const videoX = Math.floor(u * vW);
+                        const videoY = Math.floor(v * vH);
+                        const pixelIndex = (videoY * vW + videoX) * 4;
+                        if (pixelIndex < videoData.length) {
+                            const brightness = 1 + avgMidFreq * 1.5; 
+                            p.color.r = Math.min(255, videoData[pixelIndex] * brightness);
+                            p.color.g = Math.min(255, videoData[pixelIndex + 1] * brightness);
+                            p.color.b = Math.min(255, videoData[pixelIndex + 2] * brightness);
+                        }
+                    }
+                }
+                
+                p.history.forEach((h, i) => {
+                    const alpha = (i / p.maxHistory) * 0.5;
+                    ctx.beginPath();
+                    ctx.fillStyle = `rgba(${p.color.r}, ${p.color.g}, ${p.color.b}, ${alpha})`;
+                    ctx.arc(h.x, h.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            });
+
+        }, [micActive]);
+
+
+        React.useEffect(() => {
+            animationFrameIdRef.current = requestAnimationFrame(draw);
+            return () => {
+                cancelAnimationFrame(animationFrameIdRef.current);
+            };
+        }, [draw]);
+
+        return (
+            <canvas ref={canvasRef}></canvas>
+        );
+    };
+
+    ReactDOM.createRoot(document.getElementById('react-visualizer-root')).render(<App />);
+    </script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Horizontal Scroll for Videos ---
+        gsap.registerPlugin(ScrollTrigger);
+        const track = document.querySelector('.video-track');
+        const trackContainer = document.querySelector('.video-track-container');
+
+        // A delay to ensure all assets are loaded and dimensions are correct
+        setTimeout(() => {
+            const horizontalScroll = gsap.to(track, {
+                x: () => -(track.scrollWidth - trackContainer.clientWidth),
+                ease: "none",
+                scrollTrigger: {
+                    trigger: ".horizontal-scroll-section",
+                    start: "top top",
+                    end: () => "+=" + (track.scrollWidth - trackContainer.clientWidth),
+                    scrub: true,
+                    pin: true,
+                    invalidateOnRefresh: true
+                }
+            });
+        }, 100);
+
+        
+        // Video hover to play
+        document.querySelectorAll('.video-card').forEach(card => {
+            const video = card.querySelector('video');
+            card.addEventListener('mouseenter', () => video.play());
+            card.addEventListener('mouseleave', () => video.pause());
+            
+            // --- NEW: Click to fullscreen ---
+            card.addEventListener('click', () => {
+                const fullscreenModal = document.getElementById('fullscreen-modal');
+                const fullscreenVideo = document.getElementById('fullscreen-video');
+                fullscreenVideo.src = video.src;
+                fullscreenModal.style.display = 'flex';
+                fullscreenVideo.play();
+            });
+
+            // --- NEW: Mute/Unmute functionality ---
+            const muteBtn = card.querySelector('.mute-toggle-btn');
+            const muteIcon = muteBtn.querySelector('i');
+            muteBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent the click from bubbling to the video card
+                if (video.muted) {
+                    video.muted = false;
+                    muteIcon.classList.remove('ph-speaker-slash');
+                    muteIcon.classList.add('ph-speaker-high');
+                } else {
+                    video.muted = true;
+                    muteIcon.classList.remove('ph-speaker-high');
+                    muteIcon.classList.add('ph-speaker-slash');
+                }
+            });
+        });
+        
+        // --- NEW: Close fullscreen modal ---
+        document.getElementById('close-fullscreen-btn').addEventListener('click', () => {
+            const fullscreenModal = document.getElementById('fullscreen-modal');
+            const fullscreenVideo = document.getElementById('fullscreen-video');
+            fullscreenVideo.pause();
+            fullscreenModal.style.display = 'none';
+        });
+
+        // --- A/B Audio Player ---
+        document.querySelectorAll('.audio-player').forEach(player => {
+            const playPauseBtn = player.querySelector('.play-pause-btn');
+            const abToggle = player.querySelector('.ab-toggle');
+            const unmixedAudio = player.querySelector('.unmixed-audio');
+            const mixedAudio = player.querySelector('.mixed-audio');
+            let isPlaying = false;
+            let isMixed = false;
+
+            function syncAndPlay() {
+                const primary = isMixed ? mixedAudio : unmixedAudio;
+                const secondary = isMixed ? unmixedAudio : mixedAudio;
+                secondary.currentTime = primary.currentTime;
+                primary.play();
+                secondary.pause();
+                isPlaying = true;
+                updatePlayButton();
+            }
+
+            function pauseAll() {
+                unmixedAudio.pause();
+                mixedAudio.pause();
+                isPlaying = false;
+                updatePlayButton();
+            }
+            
+            function updatePlayButton() {
+                playPauseBtn.innerHTML = isPlaying ? 
+                    `<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>` : 
+                    `<svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>`;
+            }
+
+            playPauseBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    pauseAll();
+                } else {
+                    syncAndPlay();
+                }
+            });
+
+            abToggle.addEventListener('click', () => {
+                isMixed = !isMixed;
+                abToggle.classList.toggle('toggled');
+                if (isPlaying) {
+                    syncAndPlay();
+                }
+            });
+            
+            [unmixedAudio, mixedAudio].forEach(audio => {
+                audio.addEventListener('ended', () => {
+                    pauseAll();
+                    unmixedAudio.currentTime = 0;
+                    mixedAudio.currentTime = 0;
+                });
+            });
+        });
+    });
+    </script>
+    <script>
+        window.addEventListener('resize', () => {
+            const canvas = document.querySelector('#react-visualizer-root canvas');
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+        });
+        window.dispatchEvent(new Event('resize')); // Initial sizing
+    </script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const contactButton = document.getElementById('contact-now-button');
+    if (contactButton) {
+        contactButton.addEventListener('click', () => {
+            const subject = encodeURIComponent("Let's Work Together");
+            const body = encodeURIComponent("Hi, I'm interested in working with you!");
+            window.location.href = `mailto:Gopalclark4@gmail.com?subject=${subject}&body=${body}`;
+        });
+    }
+});
+</script>
+
+</body>
+</html>
